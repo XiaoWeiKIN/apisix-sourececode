@@ -166,25 +166,27 @@ function _M.read_yaml_conf(apisix_home)
     if apisix_home then
         profile.apisix_home = apisix_home .. "/"
     end
-    -- "/mnt/hgfs/apisix-2.4/conf/config.yaml"
+    -- local_conf_path="/mnt/hgfs/apisix-2.4/conf/config-default.yaml"
     local local_conf_path = profile:yaml_path("config-default")
+    -- 读取默认配置文件
     local default_conf_yaml, err = util.read_file(local_conf_path)
     if not default_conf_yaml then
         return nil, err
     end
-
+    -- 使用tinyyaml解析配置文件
     local default_conf = yaml.parse(default_conf_yaml)
     if not default_conf then
         return nil, "invalid config-default.yaml file"
     end
 
-    -- "/mnt/hgfs/apisix-2.4/conf/config.yaml"
+    -- local_conf_path="/mnt/hgfs/apisix-2.4/conf/config.yaml"
     local_conf_path = profile:yaml_path("config")
+    -- 读取用户自定义配置文件
     local user_conf_yaml, err = util.read_file(local_conf_path)
     if not user_conf_yaml then
         return nil, err
     end
-
+    -- 校验
     local is_empty_file = true
     for line in str_gmatch(user_conf_yaml .. '\n', '(.-)\r?\n') do
         if not is_empty_yaml_line(line) then
@@ -194,6 +196,7 @@ function _M.read_yaml_conf(apisix_home)
     end
 
     if not is_empty_file then
+        -- 使用tinyyaml解析配置文件自定义配置文件
         local user_conf = yaml.parse(user_conf_yaml)
         if not user_conf then
             return nil, "invalid config.yaml file"
@@ -203,7 +206,7 @@ function _M.read_yaml_conf(apisix_home)
         if not ok then
             return nil, err
         end
-        -- 合并配置
+        -- 合并配置，使用user_conf覆盖default_conf
         ok, err = merge_conf(default_conf, user_conf)
         if not ok then
             return nil, err

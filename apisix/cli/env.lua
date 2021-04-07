@@ -31,14 +31,16 @@ return function (apisix_home, pkg_cpath_org, pkg_path_org)
     -- only for developer, use current folder as working space
     local is_root_path = false
     local script_path = arg[0]
+    --如果启动命令以'./'开头
     if script_path:sub(1, 2) == './' then
+        -- 获取到用户的APISIX安装路径，我的是/mnt/hgfs/apisix-2.4
         apisix_home = util.trim(util.execute_cmd("pwd"))
         if not apisix_home then
             error("failed to fetch current path")
         end
 
-        -- determine whether the current path is under the "/root" folder.
-        -- "/root/" is the root folder flag.
+        -- 确定当前路径是否在/root文件夹下。
+        -- "/root/"是根目录标志。
         if str_find(apisix_home .. "/", '/root/', nil, true) == 1 then
             is_root_path = true
         end
@@ -73,7 +75,7 @@ return function (apisix_home, pkg_cpath_org, pkg_path_org)
                            .. apisix_home .. [[/conf/nginx.conf]]
 
     local min_etcd_version = "3.4.0"
-
+    -- 返回环境信息
     return {
         apisix_home = apisix_home,
         is_root_path = is_root_path,

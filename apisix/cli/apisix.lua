@@ -19,7 +19,7 @@ local pkg_cpath_org = package.cpath
 local pkg_path_org = package.path
 local debug_path = "./?.lua;/opt/zbstudio/lualibs/?/?.lua;/opt/zbstudio/lualibs/?.lua;"
 local debug_cpath = "/opt/zbstudio/bin/linux/x64/?.so;/opt/zbstudio/bin/linux/x64/clibs/?.so;"
-
+-- 默认安装路径
 local apisix_home = "/usr/local/apisix"
 local pkg_cpath = apisix_home .. "/deps/lib64/lua/5.1/?.so;"
                   .. apisix_home .. "/deps/lib/lua/5.1/?.so;"

@@ -31,13 +31,13 @@ local _M = {}
 -- it is recommended to use the `trim` function to handle the return value.
 function _M.execute_cmd(cmd)
     --使用io.popen函数来执行命令（和直接在命令行界面执行命令的结果上一样的，不过使用函数这种方式的结果保存在文件中），在这里执行的就是下面的pwd命令
-    local t, err = popen(cmd)
+    local t, err = popen(cmd) --这里返回的t其实是一个文件描述符
     if not t then
         return nil, "failed to execute command: "
                     .. cmd .. ", error info: " .. err
     end
 
-    local data, err = t:read("*all")
+    local data, err = t:read("*all")  --执行read命令读取文件
     t:close()
 
     if err ~= nil then
@@ -45,7 +45,7 @@ function _M.execute_cmd(cmd)
                     .. cmd .. ", error info: " .. err
     end
 
-    return data
+    return data --结尾的\n是换行符
 end
 
 

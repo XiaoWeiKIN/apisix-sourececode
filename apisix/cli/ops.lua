@@ -151,7 +151,7 @@ local function init(env)
               .. 'other than /root.')
     end
 
-    -- read_yaml_conf
+    -- read_yaml_conf读取配置文件
     local yaml_conf, err = file.read_yaml_conf(env.apisix_home)
     if not yaml_conf then
         util.die("failed to read local yaml config of apisix: ", err, "\n")
@@ -167,10 +167,10 @@ local function init(env)
             end
         end
     end
-
+    -- 不是本机访问的情况，必须要配置token
     if yaml_conf.apisix.enable_admin and not checked_admin_key then
         local help = [[%s Please modify "admin_key" in conf/config.yaml .]]
-        
+        -- admin key需要是数组类型
         if type(yaml_conf.apisix.admin_key) ~= "table" or
            #yaml_conf.apisix.admin_key == 0
         then
@@ -196,7 +196,7 @@ local function init(env)
             end
         end
     end
-    -- admin的数据源必须使用ETCD
+    -- 开启admin的数据源必须使用ETCD
     if yaml_conf.apisix.enable_admin and
         yaml_conf.apisix.config_center == "yaml"
     then
@@ -267,7 +267,7 @@ local function init(env)
             util.die(err, "\n")
         end
     end
-
+    -- 检查admin的mtls
     local admin_api_mtls = yaml_conf.apisix.admin_api_mtls
     if yaml_conf.apisix.https_admin and
        not (admin_api_mtls and
@@ -282,7 +282,8 @@ local function init(env)
     -- enable ssl with place holder crt&key
     yaml_conf.apisix.ssl.ssl_cert = "cert/ssl_PLACE_HOLDER.crt"
     yaml_conf.apisix.ssl.ssl_cert_key = "cert/ssl_PLACE_HOLDER.key"
-
+    
+    -- dubbo代理检查
     local dubbo_upstream_multiplex_count = 32
     if yaml_conf.plugin_attr and yaml_conf.plugin_attr["dubbo-proxy"] then
         local dubbo_conf = yaml_conf.plugin_attr["dubbo-proxy"]
@@ -374,7 +375,7 @@ local function init(env)
     if sys_conf.allow_admin and #sys_conf.allow_admin == 0 then
         sys_conf.allow_admin = nil
     end
-    --是否配置外置dns解析,获取本地dns解析器
+    --是否配置外置dns解析,获取本地dns解析器，如果没有获取本地的DNS解析器
     local dns_resolver = sys_conf["dns_resolver"]
     if not dns_resolver or #dns_resolver == 0 then
         local dns_addrs, err = local_dns_resolver("/etc/resolv.conf")
@@ -440,14 +441,11 @@ end
 
 
 local function start(env, ...)
-    -- Because the worker process started by apisix has "nobody" permission,
-    -- it cannot access the `/root` directory. Therefore, it is necessary to
-    -- prohibit APISIX from running in the /root directory.
-    -- 因为权限问题，禁止APISIX在root目录下运行
+    -- 因为apisix启动的工作进程有“nobody”权限，它不能访问' /root '目录。因此，有必要禁止APISIX在/根目录下运行。
     if env.is_root_path then
         util.die("Error: It is forbidden to run APISIX in the /root directory.\n")
     end
-    -- 创建日志目录
+    -- 创建日志目录 "mkdir -p /mnt/hgfs/apisix-2.4/logs"
     local cmd_logs = "mkdir -p " .. env.apisix_home .. "/logs"
     util.execute_cmd(cmd_logs)
 
@@ -456,6 +454,7 @@ local function start(env, ...)
     local pid = util.read_file(pid_path)
     -- pid转化为数字
     pid = tonumber(pid)
+    -- 检查nginx master进程是否在运行
     if pid then
         local lsof_cmd = "lsof -p " .. pid
         local hd = popen(lsof_cmd)
@@ -473,7 +472,9 @@ local function start(env, ...)
         print("nginx.pid exists but there's no corresponding process with pid ", pid,
               ", the file will be overwritten")
     end
-
+    
+    -- 命令行解析
+    -- 
     local parser = argparse()
     parser:argument("_", "Placeholder")
     parser:option("-c --config", "location of customized config.yaml")
@@ -489,8 +490,9 @@ local function start(env, ...)
         util.execute_cmd("ln " .. customized_yaml .. " " .. local_conf_path)
         print("Use customized yaml: ", customized_yaml)
     end
-
+    -- 初始化openresty配置
     init(env)
+    -- 初始化etcd
     init_etcd(env, args)
 
     util.execute_cmd(env.openresty_args)
