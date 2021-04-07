@@ -1,0 +1,22 @@
+rock_manifest = {
+   doc = {
+      LICENSE = "175792518e4ac015ab6696d16c4f607e",
+      ["README.md"] = "318cf77c457efb56c6d34b3de1e06496"
+   },
+   lua = {
+      resty = {
+         dns = {
+            balancer = {
+               ["base.lua"] = "08b06ad3fcad16ab174785d2a999c0a7",
+               ["consistent_hashing.lua"] = "e0152105c7e49360f53f01808e9df02a",
+               ["handle.lua"] = "a39bb1ef581adbd8d64996a2dc058468",
+               ["least_connections.lua"] = "efb070a2fcb97c2523cf90b89570fe6c",
+               ["ring.lua"] = "e2abbe85e7310357d467cb007d820c0a"
+            },
+            ["client.lua"] = "56b22840306e932b5c4cb83e84746014",
+            ["utils.lua"] = "f8013f28ab8eabebc65a4b435565fe14"
+         }
+      }
+   },
+   ["lua-resty-dns-client-5.2.0-1.rockspec"] = "68e91a2ce37f8a8762ecd95bd4233486"
+}

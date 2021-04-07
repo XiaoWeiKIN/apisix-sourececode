@@ -1,0 +1,13 @@
+rock_manifest = {
+   doc = {
+      ["CHANGELOG.md"] = "d836ffa06a4175886d5d1560293049ed",
+      LICENSE = "d01a98470cdd2f3c0e4c16a52e64c1fb",
+      ["README.md"] = "cbb9f6cd3b76c26235bd9298c5917a78"
+   },
+   lua = {
+      ["prometheus.lua"] = "06a6c893f2d726d1fa26ffa5b3208126",
+      ["prometheus_keys.lua"] = "0a52ca43538b5a84e140adb8cdeb2c74",
+      ["prometheus_resty_counter.lua"] = "2852321bc42c146004bf90474851a005"
+   },
+   ["nginx-lua-prometheus-0.20201218-1.rockspec"] = "34c38af403c1819e00b7d40316a379f2"
+}
