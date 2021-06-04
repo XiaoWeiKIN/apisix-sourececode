@@ -69,6 +69,7 @@ function _M.init()
 
     --allow user to specify a meaningful id as apisix instance id
     local local_conf = fetch_local_conf()
+    -- 读取apisix id，如果用户没有配置则随机生成一个
     local id = try_read_attr(local_conf, "apisix", "id")
     if id then
         apisix_uid = local_conf.apisix.id
@@ -77,7 +78,7 @@ function _M.init()
         apisix_uid = uuid.generate_v4()
         log.notice("not found apisix uid, generate a new one: ", apisix_uid)
     end
-
+    -- 写入到apisix.uid文件
     local ok, err = write_file(uid_file_path, apisix_uid)
     if not ok then
         log.error(err)

@@ -57,7 +57,7 @@ end
 function _M.split(self, sep)
     local sep, fields = sep or ":", {}
     local pattern = str_format("([^%s]+)", sep)
-
+    -- 符合pattern 则回调函数 
     self:gsub(pattern, function(c) fields[#fields + 1] = c end)
 
     return fields

@@ -52,6 +52,7 @@ local ver_header    = "APISIX/" .. core.version.VERSION
 
 local function parse_args(args)
     dns_resolver = args and args["dns_resolver"]
+    -- 设置dns解析器地址
     core.utils.set_resolver(dns_resolver)
     core.log.info("dns resolver", core.json.delay_encode(dns_resolver, true))
 end
@@ -62,11 +63,11 @@ local _M = {version = 0.4}
 
 function _M.http_init(args)
     require("resty.core")
-
+    -- https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/re.md
     if require("ffi").os == "Linux" then
         require("ngx.re").opt("jit_stack_size", 200 * 1024)
     end
-
+    -- 设置luajit虚拟机参数 https://luajit.org/running.html
     require("jit.opt").start("minstitch=2", "maxtrace=4000",
                              "maxrecord=8000", "sizemcode=64",
                              "maxmcode=4000", "maxirconst=1000")

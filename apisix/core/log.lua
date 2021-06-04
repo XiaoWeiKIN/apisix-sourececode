@@ -74,7 +74,7 @@ end
 
 setmetatable(_M, {__index = function(self, cmd)
     local log_level = log_levels[cmd]
-
+    -- 只有比当前日志级别高的才打印，优化性能
     local method
     if cur_level and (log_level > cur_level)
     then
@@ -84,9 +84,8 @@ setmetatable(_M, {__index = function(self, cmd)
             return ngx_log(log_level, ...)
         end
     end
-
-    -- cache the lazily generated method in our
-    -- module table
+    
+    -- 将惰性生成方法缓存到模块的表中
     _M[cmd] = method
     return method
 end})

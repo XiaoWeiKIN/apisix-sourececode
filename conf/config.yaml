@@ -37,3 +37,13 @@ apisix:
       key: edd1c9f034335f136f87ad84b625c8f1  # using fixed API token has security risk, please update it when you deploy to production environment
       # yamllint enable rule:comments-indentation
       role: admin
+
+nginx_config:    # config for render the template to generate nginx.conf
+  error_log: "logs/error.log"
+  error_log_level: "info"
+discovery:
+  eureka: 
+    host:
+      - "http://127.0.0.1:8761"
+    prefix: "/eureka/"
+

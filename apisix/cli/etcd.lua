@@ -105,7 +105,7 @@ local function request(url, yaml_conf)
     end
 
     local res, code
-
+    -- 检查是否为https
     if str_sub(url.url, 1, 8) == "https://" then
         local verify = "peer"
         if yaml_conf.etcd.tls and yaml_conf.etcd.tls.verify == false then
@@ -119,9 +119,9 @@ local function request(url, yaml_conf)
         res, code = http.request(url)
     end
 
-    -- In case of failure, request returns nil followed by an error message.
-    -- Else the first return value is the response body
-    -- and followed by the response status code.
+    -- 在失败的情况下，request返回nil，然后是一个错误消息。
+    -- 否则第一个返回值是响应体
+    -- 然后是响应状态代码。
     if single_request and res ~= nil then
         return table_concat(response_body), code
     end
@@ -140,7 +140,7 @@ function _M.init(env, args)
     if not yaml_conf.apisix then
         util.die("failed to read `apisix` field from yaml file when init etcd")
     end
-
+    -- 检查是etcd是否作为配置中心，如果不是直接返回
     if yaml_conf.apisix.config_center ~= "etcd" then
         return true
     end
@@ -151,13 +151,13 @@ function _M.init(env, args)
 
     local etcd_conf = yaml_conf.etcd
 
-    -- convert old single etcd config to multiple etcd config
+    -- 转换旧的单一etcd配置为多个etcd配置
     if type(yaml_conf.etcd.host) == "string" then
         yaml_conf.etcd.host = {yaml_conf.etcd.host}
     end
-
+    --获取配置的etcd集群的多个地址
     local host_count = #(yaml_conf.etcd.host)
-    -- 获取协议scheme
+    -- 获取协议scheme, 拼接集群地址
     local scheme
     for i = 1, host_count do
         local host = yaml_conf.etcd.host[i]
@@ -177,7 +177,7 @@ function _M.init(env, args)
     for index, host in ipairs(yaml_conf.etcd.host) do
         local version_url = host .. "/version"
         local errmsg
-
+        -- 获取etcd集群版本号 
         local res, err = request(version_url, yaml_conf)
         -- In case of failure, request returns nil followed by an error message.
         -- Else the first return value is the response body
@@ -186,14 +186,14 @@ function _M.init(env, args)
             errmsg = str_format("request etcd endpoint \'%s\' error, %s\n", version_url, err)
             util.die(errmsg)
         end
-
+        --解码
         local body, _, err = dkjson.decode(res)
         if err or (body and not body["etcdcluster"]) then
             errmsg = str_format("got malformed version message: \"%s\" from etcd \"%s\"\n", res,
                                 version_url)
             util.die(errmsg)
         end
-
+        -- 检查版本号
         local cluster_version = body["etcdcluster"]
         if compare_semantic_version(cluster_version, env.min_etcd_version) then
             util.die("etcd cluster version ", cluster_version,
@@ -204,6 +204,7 @@ function _M.init(env, args)
     end
 
     local etcd_ok = false
+    -- 遍历etcd集群
     for index, host in ipairs(yaml_conf.etcd.host) do
         local is_success = true
 
@@ -211,6 +212,7 @@ function _M.init(env, args)
         local auth_token
         local user = yaml_conf.etcd.user
         local password = yaml_conf.etcd.password
+        -- 如果配置了账号密码
         if user and password then
             local auth_url = host .. "/v3/auth/authenticate"
             local json_auth = {
@@ -248,14 +250,14 @@ function _M.init(env, args)
             auth_token = body_auth.token
         end
 
-
+        --准备在etcd中创建一些目录
         for _, dir_name in ipairs({"/routes", "/upstreams", "/services",
                                    "/plugins", "/consumers", "/node_status",
                                    "/ssl", "/global_rules", "/stream_routes",
                                    "/proto", "/plugin_metadata", "/plugin_configs"}) do
-
+            -- "/apisix/routes/"
             local key =  (etcd_conf.prefix or "") .. dir_name .. "/"
-
+            -- "http://127.0.0.1:2379/v3/kv/put"
             local put_url = host .. "/v3/kv/put"
             local post_json = '{"value":"' .. base64_encode("init_dir")
                               .. '", "key":"' .. base64_encode(key) .. '"}'
@@ -286,6 +288,7 @@ function _M.init(env, args)
 
             if res_put:find("error", 1, true) then
                 is_success = false
+                --如果当前已经遍历到了配置的最后一个etcd host地址，那么直接报错，因为没有机会再次在其他host上创建这个资源了
                 if (index == host_count) then
                     errmsg = str_format("got malformed key-put message: \"%s\" from etcd \"%s\"\n",
                                         res_put, put_url)
@@ -299,7 +302,7 @@ function _M.init(env, args)
                 print(res_put)
             end
         end
-
+        --如果在一个host上创建成功，则退出循环（host），标识etcd_ok资源初始化成功
         if is_success then
             etcd_ok = true
             break
